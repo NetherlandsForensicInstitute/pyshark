@@ -1,3 +1,4 @@
+from copy import deepcopy
 import json
 
 try:
@@ -41,6 +42,10 @@ def packet_from_json_packet(json_pkt, deduplicate_fields=True):
             pkt_dict = ujson.loads(json_pkt)
         else:
             pkt_dict = json.loads(json_pkt.decode('utf-8'))
+    
+    # Copy the original JSON deserialised source for later
+    source = deepcopy(pkt_dict)  # deepcopy, because the code after starts popping things
+    
     # We use the frame dict here and not the object access because it's faster.
     frame_dict = pkt_dict['_source']['layers'].pop('frame')
     layers = []
@@ -56,4 +61,5 @@ def packet_from_json_packet(json_pkt, deduplicate_fields=True):
                   number=int(frame_dict.get('frame.number', 0)),
                   length=int(frame_dict['frame.len']),
                   sniff_time=frame_dict['frame.time_epoch'],
-                  interface_captured=frame_dict.get('frame.interface_id'))
+                  interface_captured=frame_dict.get('frame.interface_id'),
+                  source=source)
